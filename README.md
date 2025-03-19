@@ -14,3 +14,13 @@
     - Windows (cmd): ```ai-mock-interview\Scripts\activate```
 - After activating the virtual environment, install the dependencies using the following command:
   - ```pip install -r requirements.txt```
+
+## Workflows
+Update config.yaml
+Update params.yaml
+Update entity
+Update the configuration manager in src config
+update the components
+update the pipeline
+update the main.py
+update the app.py
