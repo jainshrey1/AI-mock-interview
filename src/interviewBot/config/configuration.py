@@ -54,6 +54,7 @@ class ConfigurationManager:
         data_transformation_config = DataTransformationConfig(
             root_dir=config.root_dir,
             data_path=config.data_path,
+            model_path = config.model_path,
             tokenizer_name = config.tokenizer_name
         )
 

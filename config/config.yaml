@@ -10,3 +10,10 @@ data_validation:
   root_dir: artifacts/data_validation
   STATUS_FILE: artifacts/data_validation/status.txt
   ALL_REQUIRED_FILES: ["train", "test", "validation"]
+
+data_transformation:
+  root_dir: artifacts/data_transformation
+  data_path: artifacts/data_ingestion/samsum_dataset/cleaned_dataset.csv
+  model_name: microsoft/phi-2
+  tokenizer_name: microsoft/phi-2
+  
