@@ -16,4 +16,10 @@ data_transformation:
   data_path: artifacts/data_ingestion/Data/combined_data.csv
   model_name: microsoft/phi-2
   tokenizer_name: microsoft/phi-2
+
+model_trainer:
+  root_dir: artifacts/model_trainer
+  data_path: artifacts/data_transformation/interview_dataset
+  model_ckpt: microsoft/phi-2
+  tokenizer_name: microsoft/phi-2
   

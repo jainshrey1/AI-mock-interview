@@ -142,6 +142,8 @@ class DataTransformation:
         set_seed(seed)
         dataset= self.load_data()
         train_dataset = self.preprocess_dataset(self.config.tokenizer_name,max_length,seed, dataset['train'])
-        eval_dataset = self.preprocess_dataset(self.config.tokenizer_name,max_length,seed, dataset['validation'])
-                
-        return train_dataset, eval_dataset
+        eval_dataset = self.preprocess_dataset(self.config.tokenizer_name,max_length,seed, dataset['validation'])  
+
+        train_dataset.save_to_disk(os.path.join(self.config.root_dir, "interview_dataset/train"))
+        eval_dataset.save_to_disk(os.path.join(self.config.root_dir, "interview_dataset/validation"))  
+        #return train_dataset, eval_dataset

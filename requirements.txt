@@ -6,5 +6,6 @@ PyYAML==6.0.2
 datasets==3.4.1
 torch==2.2.2
 bitsandbytes==0.42.0
+peft==0.15.0
 accelerate==1.5.2
 -e .
