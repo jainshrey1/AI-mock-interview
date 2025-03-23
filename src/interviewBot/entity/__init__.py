@@ -18,7 +18,8 @@ class DataValidationConfig:
 class DataTransformationConfig:
     root_dir: Path
     data_path: Path
-    tokenizer_name: Path
+    model_name: str
+    tokenizer_name: str
 
 @dataclass(frozen=True)
 class ModelTrainerConfig:

@@ -1,6 +1,5 @@
 import os
 import urllib.request as request
-import requests
 import zipfile
 from interviewBot.logging import logger
 from interviewBot.utils.common import get_size
