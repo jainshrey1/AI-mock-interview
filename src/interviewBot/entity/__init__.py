@@ -26,14 +26,26 @@ class ModelTrainerConfig:
     root_dir: Path
     data_path: Path
     model_ckpt: Path
+    tokenizer_name: Path
+    output_dir: Path
     num_train_epochs: int
+    max_steps: int
+    learning_rate: float
+    optim: str
     warmup_steps: int
     per_device_train_batch_size: int
     weight_decay: float
     logging_steps: int
+    logging_dir: Path
+    save_strategy: str
+    save_steps: int
     evaluation_strategy: str
     eval_steps: int
-    save_steps: float
+    do_eval: bool
+    report_to: None
+    overwrite_output_dir: bool
+    group_by_length: bool
+    gradient_checkpointing: bool
     gradient_accumulation_steps: int
 
 @dataclass(frozen=True)

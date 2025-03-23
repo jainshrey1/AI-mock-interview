@@ -67,20 +67,31 @@ class ConfigurationManager:
         create_directories([config.root_dir])
 
         model_trainer_config = ModelTrainerConfig(
-            root_dir=config.root_dir,
-            data_path=config.data_path,
+            root_dir = config.root_dir,
+            data_path = config.data_path,
             model_ckpt = config.model_ckpt,
+            tokenizer_name = config.tokenizer_name,
+            output_dir = params.output_dir,
             num_train_epochs = params.num_train_epochs,
+            max_steps = params.max_steps,
+            learning_rate = params.learning_rate,
+            optim = params.optim,
             warmup_steps = params.warmup_steps,
             per_device_train_batch_size = params.per_device_train_batch_size,
             weight_decay = params.weight_decay,
             logging_steps = params.logging_steps,
-            evaluation_strategy = params.evaluation_strategy,
-            eval_steps = params.evaluation_strategy,
+            logging_dir = params.logging_dir,
+            save_strategy = params.save_strategy,
             save_steps = params.save_steps,
+            evaluation_strategy = params.evaluation_strategy,
+            eval_steps = params.eval_steps,
+            do_eval = params.do_eval,
+            report_to = params.report_to,
+            overwrite_output_dir = params.overwrite_output_dir,
+            group_by_length = params.group_by_length,
+            gradient_checkpointing = params.gradient_checkpointing,
             gradient_accumulation_steps = params.gradient_accumulation_steps
         )
-
         return model_trainer_config
     
     def get_model_evaluation_config(self) -> ModelEvaluationConfig:
