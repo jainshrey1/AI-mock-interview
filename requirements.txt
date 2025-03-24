@@ -1,5 +1,13 @@
 streamlit==1.43.2
 python-box==7.3.2
+transformers==4.49.0
 ensure==1.0.4
 PyYAML==6.0.2
+datasets==3.4.1
+torch==2.2.2
+bitsandbytes==0.42.0
+peft==0.15.0
+accelerate==1.5.2
+fastapi==0.115.11
+uvicorn==0.34.0
 -e .

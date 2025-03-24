@@ -15,7 +15,7 @@ class DataValidation:
         try:
             validation_status = None
 
-            all_files = os.listdir(os.path.join("artifacts","data_ingestion","samsum_dataset"))
+            all_files = os.listdir(os.path.join("artifacts","data_ingestion","Data"))
 
             for file in all_files:
                 if file not in self.config.ALL_REQUIRED_FILES:
