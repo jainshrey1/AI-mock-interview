@@ -1,5 +1,7 @@
 from langchain_groq import ChatGroq
-
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
+from langchain.schema.runnable import RunnableSequence
 import getpass
 import os
 
@@ -20,6 +22,13 @@ llm = ChatGroq(
     # other params...
 )
 
+prompt1 = PromptTemplate(
+    template='Write a joke about {topic}',
+    input_variables=['topic']
+)
+
+parser = StrOutputParser()
+
 messages = [
     (
         "system",
@@ -27,6 +36,10 @@ messages = [
     ),
     ("human", "Hi, I am a Data Analyst with 3 years of experience. I am proficient in SQL, Python, and Tableau. I have worked on various projects involving data cleaning, visualization, and analysis. I am looking for a new opportunity to grow my career. Can you ask me a question related to my experience?"),
 ]
-ai_msg = llm.invoke(messages)
-print(type(ai_msg))
-print(ai_msg.content)
+
+
+chain = RunnableSequence(prompt1, llm, parser)
+print(chain.invoke({'topic':'AI'}))
+#ai_msg = llm.invoke(messages)
+#print(type(ai_msg))
+#print(ai_msg.content)
