@@ -1,5 +1,6 @@
 streamlit==1.43.2
 python-box==7.3.2
+numpy==1.26.4
 transformers==4.49.0
 ensure==1.0.4
 PyYAML==6.0.2
