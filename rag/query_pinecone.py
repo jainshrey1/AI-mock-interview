@@ -33,6 +33,8 @@ def query_pinecone(query, top_k=2):
 
         print("🔹 Querying Pinecone...")
         query_results = index.query(vector=xq, top_k=top_k, include_metadata=True)
+
+        return query_results
         # Display results
         print("\n🔹 Top Matching Results:")
         for match in query_results["matches"]:
