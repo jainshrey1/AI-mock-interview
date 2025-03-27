@@ -41,10 +41,10 @@ def query_pinecone(query, top_k=2):
             print(f"✅ Answer: {match['metadata']['answer']}")
             print("-" * 50)
 
-        return query_results
     except Exception as e:
         raise Exception(f"❌ Error querying Pinecone: {e}")
 
-# Example query
-query = "What are some common challenges you have faced while working with Power BI, and how did you overcome them?"
-query_results = query_pinecone(query, top_k=3)
+if __name__ == "__main__":
+    #Example query
+    query = "What are some common challenges you have faced while working with Power BI, and how did you overcome them?"
+    query_results = query_pinecone(query, top_k=3)
