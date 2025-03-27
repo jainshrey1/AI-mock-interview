@@ -11,7 +11,7 @@ peft==0.15.0
 accelerate==1.5.2
 fastapi==0.115.11
 uvicorn==0.34.0
-python-dotenv=1.1.0
+python-dotenv==1.1.0
 pinecone==6.0.2
 openai==1.68.2
 langchain==0.3.21
