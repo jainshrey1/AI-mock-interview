@@ -1,3 +1,5 @@
+PyPDF2==3.0.1
+docx2txt==0.9
 streamlit==1.43.2
 python-box==7.3.2
 numpy==1.26.4
