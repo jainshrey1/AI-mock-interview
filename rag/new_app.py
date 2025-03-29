@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import json
+import speech_recognition as sr
 from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -85,8 +86,36 @@ if st.sidebar.button("Generate Report"):
 st.title("🤖 AI Mock Interview")
 chat_container = st.container()
 
+# 🎤 VOICE INPUT FUNCTION
+def recognize_speech():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        st.info("🎙️ Listening... Speak now!")
+        recognizer.adjust_for_ambient_noise(source)
+        try:
+            audio = recognizer.listen(source, timeout=5)
+            st.success("Processing voice input...")
+            return recognizer.recognize_google(audio)
+        except sr.UnknownValueError:
+            st.error("Sorry, could not understand the audio.")
+            return ""
+        except sr.RequestError:
+            st.error("Speech recognition service is unavailable.")
+            return ""
+
 if "chat_active" in st.session_state and st.session_state.chat_active:
-    user_input = st.chat_input("Type your response...")
+    st.write("🎤 **You can type or use voice input!**")
+    col1, col2 = st.columns([1, 3])
+    
+    with col1:
+        voice_button = st.button("🎙️ Use Voice Input")
+    
+    with col2:
+        user_input = st.chat_input("Type your response...")
+
+    if voice_button:
+        user_input = recognize_speech()
+
     if user_input:
         st.session_state.messages.append({"role": "user", "content": user_input})
         st.session_state.conversation_history.append({"question": st.session_state.last_question, "answer": user_input})
