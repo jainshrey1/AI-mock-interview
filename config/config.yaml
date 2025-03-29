@@ -1,0 +1,25 @@
+artifacts_root: artifacts
+
+data_ingestion:
+  root_dir: artifacts/data_ingestion
+  source_URL: https://github.com/SachinMishra-ux/Dataset/raw/refs/heads/main/Data.zip
+  local_data_file: artifacts/data_ingestion/data.zip
+  unzip_dir: artifacts/data_ingestion
+
+data_validation:
+  root_dir: artifacts/data_validation
+  STATUS_FILE: artifacts/data_validation/status.txt
+  ALL_REQUIRED_FILES: ["train", "test", "validation"]
+
+data_transformation:
+  root_dir: artifacts/data_transformation
+  data_path: artifacts/data_ingestion/Data/combined_data.csv
+  model_name: microsoft/phi-2
+  tokenizer_name: microsoft/phi-2
+
+model_trainer:
+  root_dir: artifacts/model_trainer
+  data_path: artifacts/data_transformation/interview_dataset
+  model_ckpt: microsoft/phi-2
+  tokenizer_name: microsoft/phi-2
+  
