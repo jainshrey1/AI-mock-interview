@@ -12,12 +12,14 @@ from report_generation import generate_report
 from query_pinecone import query_pinecone
 from llm_setup import get_prompt_template
 
-# Load environment variables
+# Load environment variables from .env file
 load_dotenv()
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 
 def initialize_llm(model):
     """Initialize the LLM with the selected model and API key."""
-    os.environ["GROQ_API_KEY"] = st.session_state.groq_api_key
+    os.environ["GROQ_API_KEY"] = GROQ_API_KEY
     return ChatGroq(
         model=model,
         temperature=0,
@@ -25,6 +27,7 @@ def initialize_llm(model):
         timeout=None,
         max_retries=2,
     )
+
 def get_question_answer_context(user_info):
     """Fetches relevant interview questions from Pinecone."""
     query_results = query_pinecone(query=user_info, top_k=4)
@@ -47,16 +50,13 @@ if "report_ready" not in st.session_state:
 st.set_page_config(page_title="AI Mock Interview", layout="wide")
 st.sidebar.title("🔧 Settings")
 
-# User inputs for API keys and model selection
-
-st.session_state.groq_api_key = st.sidebar.text_input("Groq API Key", type="password")
-st.session_state.pinecone_api_key = st.sidebar.text_input("Pinecone API Key", type="password")
+# User selects the model
 st.session_state.selected_model = st.sidebar.selectbox("Select Model", ["qwen-2.5-32b", "llama-2-13b", "gpt-4"])
 
 # Sidebar buttons
 if st.sidebar.button("Start Interview"):
-    if not st.session_state.groq_api_key or not st.session_state.pinecone_api_key:
-        st.sidebar.warning("Please enter API keys to proceed!")
+    if not GROQ_API_KEY or not PINECONE_API_KEY:
+        st.sidebar.warning("Missing API keys! Check your .env file.")
     else:
         st.session_state.llm = initialize_llm(st.session_state.selected_model)
         st.session_state.prompt = get_prompt_template()
@@ -69,12 +69,13 @@ if st.sidebar.button("Start Interview"):
         st.session_state.report_ready = False  # Reset report state
         st.success("Interview started! Type below to respond.")
 
-# **New: End Interview Button in Sidebar**
+# End Interview Button in Sidebar
 if st.sidebar.button("End Interview"):
     """Stop the interview but DO NOT clear database.json"""
     st.session_state.chat_active = False
     st.sidebar.info("Interview ended! You can generate a report now.")
 
+# Generate Report Button in Sidebar
 if st.sidebar.button("Generate Report"):
     """Generate the report with a loading spinner, provide a download option, and delete the report file after download."""
     with st.spinner("Generating report... Please wait."):
