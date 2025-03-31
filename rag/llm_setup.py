@@ -30,14 +30,28 @@ def get_llm():
 def get_prompt_template():
     prompt = PromptTemplate(
     template="""
-    You are an expert interviewer in the Data Analytics domain, conducting a structured mock interview.
+    You are an expert interviewer in the Data Analytics domain, conducting a structured yet dynamic mock interview. Your goal is to assess the candidate’s expertise across multiple areas while maintaining a natural and engaging conversation.
 
-    - Start by asking the first question **from the provided Question-Answer list**.
-    - If the user responds, analyze their answer and ask a **relevant follow-up question** to dig deeper into their experience.
-    - If the response requires shifting topics, pick the **next question only from the provided Question-Answer list**.
-    - Never generate a new question outside the provided list.
-    - Maintain a natural conversation flow and keep each question concise (under 40 words).
-    - Occasionally, add a touch of humor to keep the interview engaging.
+    Interview Guidelines:
+    Start by asking the first question from the provided Question-Answer list.
+
+    Analyze the user’s response and ask insightful follow-up questions to assess depth and practical experience.
+
+    Rotate between different topics within the user’s expertise rather than focusing too much on one area. Ensure a mix of:
+
+    Technical skills (SQL, Python, data engineering, etc.)
+
+    Cloud & DevOps (AWS, Kubernetes, CI/CD, etc.)
+
+    Business intelligence (Tableau, Power BI, dashboarding, etc.)
+
+    Problem-solving & scenario-based questions
+
+    If all the questions from the Question-Answer list have been covered, generate new questions but only within the scope of the user_info.
+
+    Ensure questions remain diverse—don’t over-focus on one area unless the user’s responses indicate deep expertise in that field.
+
+    Occasionally add a touch of humor or encouragement to keep the conversation engaging.
 
     **Previous Conversation:** {conversation_history}
     **User Information:** {user_info}  
@@ -46,21 +60,33 @@ def get_prompt_template():
     )
     return prompt
 
-def get_user_info():
+def generate_user_info(resume_text, job_description):
     """
-    Get user information for the interview.
+    Generates user information summary from resume and job description.
     """
-    user_info = """
-    Collect, clean, and analyze large datasets to provide business insights.
-    - Develop and maintain interactive dashboards using Power BI and Tableau.
-    - Perform data modeling and ensure efficient database management.
-    - Utilize SQL to query databases and extract relevant information.
-    - Conduct statistical analysis and machine learning techniques to uncover patterns and trends.
-    - Collaborate with cross-functional teams to understand business requirements and deliver data-driven solutions.
-    - Ensure data security and compliance with privacy regulations.
-    - Optimize the performance of data visualization and reporting tools.
-"""
-    return user_info
+    llm = get_llm()  # Initialize LLM
+    prompt_template = PromptTemplate(
+        template="""
+        Based on the given resume and job description, generate a structured summary 
+        that highlights the user's key skills, experience, and relevant qualifications.
+
+        **Resume Content:** {resume_text}
+        **Job Description:** {job_description}
+
+        Output should be formatted as:
+        - Key Skills: [...]
+        - Work Experience: [...]
+        - Projects: [...]
+        """,
+        input_variables=["resume_text", "job_description"]
+    )
+
+    chain = RunnableSequence(prompt_template, llm, StrOutputParser())
+    user_info_summary = chain.invoke({"resume_text": resume_text, "job_description": job_description})
+
+    return user_info_summary
+
+
 
 
 def get_question_answer_context():
@@ -79,17 +105,8 @@ def get_question_answer_context():
     return combine_result
 
 
-prompt= get_prompt_template()
-llm= get_llm()
-user_info= get_user_info()
-combine_result= get_question_answer_context()
 
-parser = StrOutputParser()
-
-# Load previous conversation
-conversation_history = load_conversation()
-
-def chat_with_llm():
+def chat_with_llm(prompt, llm, parser):
     """
     Get the response from the LLM based on the user message.
     """
@@ -127,4 +144,45 @@ if __name__ == "__main__":
     if "GROQ_API_KEY" not in os.environ:
         os.environ["GROQ_API_KEY"] = getpass.getpass("Enter your Groq API key: ")
     os.environ["TOKENIZERS_PARALLELISM"]=  os.getenv("TOKENIZERS_PARALLELISM")
-    chat_with_llm()
+    
+    resume_text= """
+    Summary
+    Results-driven Data Scientist with 3.5+ years of experience in machine learning, NLP, and data-driven decision-making. Expertise in Python, SQL, LLMs, and MLOps with hands-on experience in deploying ML models on AWS. Passionate about Generative AI and AI-driven automation.
+
+    Skills
+    Programming & Tools: Python, SQL, Pandas, NumPy, Scikit-learn, TensorFlow, Hugging Face, LangChain, PyTorch, Streamlit, Docker, AWS (SageMaker, Lambda), Git
+    """
+    job_description= """
+    *Job Responsibilities:*
+    - Collect, clean, and analyze large datasets to provide business insights.
+    - Develop and maintain interactive dashboards using Power BI and Tableau.
+    - Perform data modeling and ensure efficient database management.
+    - Utilize SQL to query databases and extract relevant information.
+    - Conduct statistical analysis and machine learning techniques to uncover patterns and trends.
+    - Collaborate with cross-functional teams to understand business requirements and deliver data-driven solutions.
+    - Ensure data security and compliance with privacy regulations.
+    - Optimize the performance of data visualization and reporting tools.
+
+    *Required Skills & Qualifications:*
+    - Bachelor's degree in Data Science, Computer Science, Statistics, or a related field.
+    - Proven experience with Power BI and Tableau for data visualization.
+    - Strong SQL skills for data extraction and manipulation.
+    - Knowledge of Python or R for statistical analysis and machine learning.
+    - Understanding of data modeling techniques and database management.
+    - Familiarity with Excel for data analysis and reporting.
+    - Ability to interpret and present findings to both technical and non-technical stakeholders.
+    - Experience with cloud platforms such as AWS, Azure, or Google Cloud is a plus.
+
+    *Preferred Qualifications:*
+    - Experience with data warehousing and ETL processes.
+    - Knowledge of advanced statistical methods and predictive analytics.
+    - Proficiency in business intelligence tools and automation frameworks.
+    """
+
+    
+    llm = get_llm()
+    prompt= get_prompt_template()
+    parser = StrOutputParser()
+    user_info= generate_user_info(resume_text, job_description)
+    combine_result= get_question_answer_context()
+    chat_with_llm(prompt, llm, parser)

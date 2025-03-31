@@ -20,12 +20,15 @@ from langchain.schema.runnable import RunnableSequence
 from database_helpers import load_conversation, save_conversation, clear_conversation
 from report_generation import generate_report
 from query_pinecone import query_pinecone
-from llm_setup import get_prompt_template
+from llm_setup import get_prompt_template, generate_user_info
 
 # -------------------------------
 # Load environment variables
 # -------------------------------
 load_dotenv()
+
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 
 # -------------------------------
 # Database Functions (for resume uploader)
@@ -153,7 +156,8 @@ def extract_resume_details(text):
 # Interview Helper Functions
 # -------------------------------
 def initialize_llm(model):
-    os.environ["GROQ_API_KEY"] = st.session_state.groq_api_key
+    """Initialize the LLM with the selected model and API key."""
+    os.environ["GROQ_API_KEY"] = GROQ_API_KEY
     return ChatGroq(
         model=model,
         temperature=0,
@@ -162,7 +166,9 @@ def initialize_llm(model):
         max_retries=2,
     )
 
+
 def get_question_answer_context(user_info):
+    """Fetches relevant interview questions from Pinecone."""
     query_results = query_pinecone(query=user_info, top_k=4)
     return [
         {"question": match["metadata"]["question"], "answer": match["metadata"]["answer"]}
@@ -226,7 +232,11 @@ def resume_uploader():
                     st.write("**SKILLS:**", details.get("SKILLS", ""))
                     st.write("**WORK EXPERIENCE:**", details.get("WORK EXPERIENCE", ""))
                     st.write("**PROJECT:**", details.get("PROJECT", ""))
-                    
+
+                    # Generate user info dynamically
+                    st.session_state.user_info = generate_user_info(resume_text, job_description)
+                    st.success("User info generated successfully!")
+                            
                     user_id = get_user_id(st.session_state.username)
                     conn = sqlite3.connect("app.db")
                     c = conn.cursor()
@@ -261,19 +271,20 @@ def interview_page():
     if "report_ready" not in st.session_state:
         st.session_state.report_ready = False
 
-    st.session_state.groq_api_key = st.sidebar.text_input("Groq API Key", type="password")
-    st.session_state.pinecone_api_key = st.sidebar.text_input("Pinecone API Key", type="password")
     st.session_state.selected_model = st.sidebar.selectbox("Select Model", ["qwen-2.5-32b", "llama-2-13b", "gpt-4"])
     
     if st.sidebar.button("Start Interview"):
-        if not st.session_state.groq_api_key or not st.session_state.pinecone_api_key:
-            st.sidebar.warning("Please enter API keys to proceed!")
+        if not GROQ_API_KEY or not PINECONE_API_KEY:
+            st.sidebar.warning("Missing API keys! Check your .env file.")
+        elif "user_info" not in st.session_state or not st.session_state.user_info:
+            st.sidebar.error("User info is missing! Please upload your resume first.")
         else:
             st.session_state.llm = initialize_llm(st.session_state.selected_model)
             st.session_state.prompt = get_prompt_template()
             st.session_state.parser = StrOutputParser()
             st.session_state.conversation_history = load_conversation()
-            st.session_state.user_info = "Data Analytics, SQL, Tableau, Power BI experience."
+
+            # Fetch questions using generated user_info
             st.session_state.question_answer_list = get_question_answer_context(st.session_state.user_info)
             st.session_state.chat_active = True
             st.session_state.messages = []
@@ -292,31 +303,8 @@ def interview_page():
 
     chat_container = st.container()
     
-    def recognize_speech():
-        recognizer = sr.Recognizer()
-        with sr.Microphone() as source:
-            st.info("🎙️ Listening... Speak now!")
-            recognizer.adjust_for_ambient_noise(source)
-            try:
-                audio = recognizer.listen(source, timeout=5)
-                st.success("Processing voice input...")
-                return recognizer.recognize_google(audio)
-            except sr.UnknownValueError:
-                st.error("Sorry, could not understand the audio.")
-                return ""
-            except sr.RequestError:
-                st.error("Speech recognition service is unavailable.")
-                return ""
-    
     if st.session_state.get("chat_active", False):
-        st.write("🎤 **You can type or use voice input!**")
-        col1, col2 = st.columns([1, 3])
-        with col1:
-            voice_button = st.button("🎙️ Use Voice Input")
-        with col2:
-            user_input = st.chat_input("Type your response...")
-        if voice_button:
-            user_input = recognize_speech()
+        user_input = st.chat_input("Type your response...")
         if user_input:
             st.session_state.messages.append({"role": "user", "content": user_input})
             st.session_state.conversation_history.append({"question": st.session_state.last_question, "answer": user_input})
