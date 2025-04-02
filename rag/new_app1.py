@@ -8,7 +8,11 @@ import re
 import PyPDF2
 import docx
 import os
+import speech_recognition as sr
+import tempfile
+import openai 
 import json
+from audio import record_audio
 import speech_recognition as sr
 from dotenv import load_dotenv
 
@@ -31,6 +35,10 @@ load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+OPENAI_API_KEY= os.getenv("OPENAI_API_KEY")
+
+print("API Key in Streamlit:", os.getenv("OPENAI_API_KEY"))
+
 
 # -------------------------------
 # File Extraction Functions
@@ -206,7 +214,7 @@ def resume_uploader():
 def interview_page():
     st.title("🤖 AI Mock Interview")
     st.sidebar.title("🔧 Settings")
-    
+
     if "last_question" not in st.session_state:
         st.session_state.last_question = None
     if "conversation_history" not in st.session_state:
@@ -232,7 +240,7 @@ def interview_page():
             st.session_state.chat_active = True
             st.session_state.messages = []
             st.session_state.report_ready = False
-            st.success("Interview started! Type below to respond.")
+            st.success("Interview started! Type below or use the mic to respond.")
 
     if st.sidebar.button("End Interview"):
         st.session_state.chat_active = False
@@ -245,11 +253,22 @@ def interview_page():
             clear_conversation()
 
     chat_container = st.container()
-    
+
     if st.session_state.get("chat_active", False):
         user_input = st.chat_input("Type your response...")
+
+        col1, col2 = st.columns([0.8, 0.2])
+        with col1:
+            if user_input:
+                st.session_state.messages.append({"role": "user", "content": user_input})
+        with col2:
+            if st.button("🎤 Speak"):
+                voice_text = record_audio()
+                if voice_text:
+                    st.session_state.messages.append({"role": "user", "content": voice_text})
+                    user_input = voice_text  # Use voice text as input
+        
         if user_input:
-            st.session_state.messages.append({"role": "user", "content": user_input})
             st.session_state.conversation_history.append({"question": st.session_state.last_question, "answer": user_input})
             save_conversation(st.session_state.conversation_history)
             chain = RunnableSequence(st.session_state.prompt, st.session_state.llm, st.session_state.parser)
@@ -260,6 +279,7 @@ def interview_page():
             })
             st.session_state.messages.append({"role": "assistant", "content": response})
             st.session_state.last_question = response
+
         with chat_container:
             for msg in st.session_state.messages:
                 if msg["role"] == "user":
@@ -268,7 +288,7 @@ def interview_page():
                 else:
                     with st.chat_message("assistant"):
                         st.markdown(msg["content"])
-    
+
     if st.session_state.get("report_ready", False):
         st.subheader("Interview Report")
         report_file_path = "report.txt"
@@ -284,8 +304,8 @@ def interview_page():
             os.remove(report_file_path)
             st.session_state.report_ready = False
             st.sidebar.success("Report deleted from system after download.")
-    
-    if st.button("Back to Resume Uploader"):
+
+    if st.sidebar.button("🔙 Back to Resume Uploader"):
         st.experimental_set_query_params(page="Resume")
         st.rerun()
 
