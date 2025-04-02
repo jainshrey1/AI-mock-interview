@@ -17,7 +17,9 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain.schema.runnable import RunnableSequence
-from database_helpers import load_conversation, save_conversation, clear_conversation
+from database_helpers import (load_conversation, save_conversation, 
+                              clear_conversation, init_db, create_user, 
+                              login_user, get_user_id)
 from report_generation import generate_report
 from query_pinecone import query_pinecone
 from llm_setup import get_prompt_template, generate_user_info
@@ -29,65 +31,6 @@ load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-
-# -------------------------------
-# Database Functions (for resume uploader)
-# -------------------------------
-def init_db():
-    conn = sqlite3.connect("app.db")
-    c = conn.cursor()
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password TEXT
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS resumes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            job_description TEXT,
-            resume_filename TEXT,
-            name TEXT,
-            skills TEXT,
-            work_experience TEXT,
-            projects TEXT,
-            FOREIGN KEY (user_id) REFERENCES users (id)
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-def create_user(username, password):
-    conn = sqlite3.connect("app.db")
-    c = conn.cursor()
-    try:
-        c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
-        conn.commit()
-        return True
-    except sqlite3.IntegrityError:
-        return False
-    finally:
-        conn.close()
-
-def login_user(username, password):
-    conn = sqlite3.connect("app.db")
-    c = conn.cursor()
-    c.execute("SELECT * FROM users WHERE username=? AND password=?", (username, password))
-    user = c.fetchone()
-    conn.close()
-    return bool(user)
-
-def get_user_id(username):
-    conn = sqlite3.connect("app.db")
-    c = conn.cursor()
-    c.execute("SELECT id FROM users WHERE username=?", (username,))
-    result = c.fetchone()
-    conn.close()
-    if result:
-        return result[0]
-    return None
 
 # -------------------------------
 # File Extraction Functions
